@@ -80,7 +80,15 @@ async function run() {
             res.send(result);
         })
 
+        //delete menu item
+        app.delete('/menu/:id',verifyJWT,verifyAdmin, async(req,res) => {
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id)};
+            const result = menuCollection.deleteOne(filter);
+            res.send(result)
+        })
 
+        //get review
         app.get('/reviews', async (req, res) => {
             const result = await reviewsCollection.find().toArray();
             res.send(result);
