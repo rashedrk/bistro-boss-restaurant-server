@@ -54,6 +54,17 @@ async function run() {
             res.send({token});
         })
 
+        //verify admin
+        const verifyAdmin = (req,res,next) => {
+            const email = req.decoded.email;
+            const query = {email: email};
+            const user = usersCollection.findOne(query);
+            if (user?.role !== 'admin') {
+                res.status(403).send({error: true, message: 'forbidden access'})
+            }
+            next();
+        }
+
         //get menu data
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
@@ -108,7 +119,7 @@ async function run() {
         })
 
         //get user info / all user
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         })
@@ -123,6 +134,20 @@ async function run() {
                 }
             }
             const result = await usersCollection.updateOne(filter, updateUser);
+            res.send(result);
+        })
+
+        //verify if user is admin
+        app.get('/users/admin/:email', verifyJWT, async(req,res) => {
+            const email = req.params.email;
+            const query = {email: email};
+            if ( req.decoded.email !== email) {
+                res.send({admin: false});
+            }
+            const user = await usersCollection.findOne(query);
+            // console.log(user);
+            const result = {admin : user?.role === 'admin'};
+            // console.log(result);
             res.send(result);
         })
 
